@@ -16,12 +16,16 @@ OBJJTAG = $(OBJDIR)/bootrom.o $(OBJDIR)/ram-reset.o $(OBJDIR)/usb.o
 
 OBJFLASH = $(OBJDIR)/flash-reset.o $(OBJDIR)/fromflash.o
 
-all: forjtag.s19 bootrom.s19
+all: setup forjtag.s19 bootrom.s19
+
+setup:
+	mkdir -p $(OBJDIR)
 
 $(OBJDIR)/bootrom.s19: $(OBJFLASH)
 	@echo obj/bootrom.s19
 	@$(LD) -g -Tldscript-flash --oformat elf32-littlearm -o $(OBJDIR)/bootrom.elf $(OBJFLASH)
 	@$(OBJCOPY) -Osrec --srec-forceS3 $(OBJDIR)/bootrom.elf $(OBJDIR)/bootrom.s19
+	@$(OBJCOPY) -O binary $(OBJDIR)/bootrom.elf $(OBJDIR)/bootrom.bin
 
 bootrom.s19: $(OBJDIR)/bootrom.s19 $(OBJDIR)/bootrom-forjtag.s19
 	@echo bootrom.s19
@@ -59,7 +63,8 @@ $(OBJDIR)/flash-reset.o: flash-reset.s
 	@$(CC) $(CFLAGS) -mthumb-interwork -o $(OBJDIR)/flash-reset.o flash-reset.s
 
 clean:
-	del /q obj\*.o
-	del /q obj\*.elf
-	del /q obj\*.s19
-	del /q *.s19
+	rm -f obj/*.o
+	rm -f obj/*.elf
+	rm -f obj/*.s19
+	rm -f obj/*.bin
+	rm -f *.s19

@@ -10,5 +10,5 @@
 // whatever you want to call it; USB line). I can disconnect the pull-up
 // that indicates that something is connected to the port by tri-stating
 // that line, or connect it by driving that line HIGH.
-#define GPIO_USB_PU         1
+#define GPIO_USB_PU         16
 

@@ -8,9 +8,9 @@
 
 #define USB_D_PLUS_PULLUP_ON() { \
         PIO_OUTPUT_DATA_SET = (1<<GPIO_USB_PU); \
-        PIO_OUTPUT_ENABLE = (1<<GPIO_USB_PU); \
+        PIO_OUTPUT_DISABLE = (1<<GPIO_USB_PU); \
     }
-#define USB_D_PLUS_PULLUP_OFF() PIO_OUTPUT_DISABLE = (1<<GPIO_USB_PU)
+#define USB_D_PLUS_PULLUP_OFF() PIO_OUTPUT_ENABLE = (1<<GPIO_USB_PU)
 
 #define LED_ON()            PIO_OUTPUT_DATA_SET = (1<<GPIO_LED)
 #define LED_OFF()           PIO_OUTPUT_DATA_CLEAR = (1<<GPIO_LED)
