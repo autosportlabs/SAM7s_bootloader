@@ -4,7 +4,7 @@
 #include "usb.h"
 
 unsigned int start_addr, end_addr, bootrom_unlocked;
-extern unsigned int _bootrom_start, _bootrom_end, _flash_start, _flash_end;
+extern unsigned int _bootrom_start, _bootrom_end, _flash_start, _flash_end, _osimage_entry;
 
 static void setupHardware( void )
 {
@@ -14,6 +14,8 @@ static void setupHardware( void )
 
     // Kill all the pullups, especially the one on USB D+; leave them for
     // the unused pins, though.
+
+#define BUTTON_PRESS()	!(AT91C_BASE_PIOA->PIO_PDSR & GPIO_BUTTON)
     AT91C_BASE_PIOA->PIO_PPUDR =
     	GPIO_USB_PU			|
 		GPIO_LED_1			|
@@ -37,17 +39,60 @@ static void setupHardware( void )
     LED_2_OFF();
     LED_3_OFF();
 
+
+	// enable main oscillator and set startup delay
+    AT91C_BASE_PMC->PMC_MOR = 0x00000601;
+//        AT91C_CKGR_MOSCEN |
+//        PMC_MAIN_OSC_STARTUP_DELAY(8);
+
+	// wait for main oscillator to stabilize
+	while ( !(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_MOSCS) )
+		;
+
+    // PLL output clock frequency in range  80 - 160 MHz needs CKGR_PLL = 00
+    // PLL output clock frequency in range 150 - 180 MHz needs CKGR_PLL = 10
+    // PLL output is MAINCK * multiplier / divisor = 16Mhz * 12 / 2 = 96Mhz
+    AT91C_BASE_PMC->PMC_PLLR = 0x00191C05;
+//    	PMC_PLL_DIVISOR(2) |
+//		PMC_PLL_COUNT_BEFORE_LOCK(0x50) |
+//		PMC_PLL_FREQUENCY_RANGE(0) |
+//		PMC_PLL_MULTIPLIER(12) |
+//		PMC_PLL_USB_DIVISOR(1);
+
+	// wait for PLL to lock
+	while ( !(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_LOCK) )
+		;
+
+	// datasheet recommends that this register is programmed in two operations
+	// when changing to PLL, program the prescaler first then the source
+    AT91C_BASE_PMC->PMC_MCKR = 0x00000007;
+
+	// wait for main clock ready signal
+	while ( !(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_MCKRDY) )
+		;
+
+	// set the source to PLL
+//    AT91C_BASE_PMC->PMC_MCKR = 0x00000007 | AT91C_PMC_CSS_PLL_CLK;
+
+	// wait for main clock ready signal
+	//while ( !(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_MCKRDY) )
+		//;
+
 	/* When using the JTAG debugger the hardware is not always initialised to
 	the correct default state.  This line just ensures that this does not
 	cause all interrupts to be masked at the start. */
 	AT91C_BASE_AIC->AIC_EOICR = 0;
+
+	//======================================
+
+	/* Enable reset-button */
+	AT91C_BASE_RSTC->RSTC_RMR = (0xA5000000 | AT91C_RSTC_URSTEN);
 
     // Set the PLL USB Divider
     AT91C_BASE_CKGR->CKGR_PLLR |= AT91C_CKGR_USBDIV_1 ;
 
     // enable system clock and USB clock
     AT91C_BASE_PMC->PMC_SCER = AT91C_PMC_PCK | AT91C_PMC_UDP;
-
 
 	// enable the clock to the following peripherals
     AT91C_BASE_PMC->PMC_PCER =
@@ -58,8 +103,6 @@ static void setupHardware( void )
 		(1<<AT91C_ID_PWMC)	|
 		(1<<AT91C_ID_UDP);
 
-	/* Enable reset-button */
-	AT91C_BASE_RSTC->RSTC_RMR = (0xA5000000 | AT91C_RSTC_URSTEN);
 	return;
  }
 
@@ -204,5 +247,12 @@ int main(void)
 {
     setupHardware();
 
-    flash_mode(0);
+
+    if(BUTTON_PRESS()) {
+    	flash_mode(0);
+    } else {
+    	// jump to Flash address of the osimage entry point (LSBit set for thumb mode)
+    	//asm("bx %0\n" : : "r" ( ((int)&_osimage_entry) | 0x1 ) );
+    	asm("bx %0\n" : : "r" ( ((int)&_osimage_entry)) );
+    }
 }

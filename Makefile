@@ -59,8 +59,6 @@ CPU_MODULE_DIR = cpu_module
 SRC	= \
 $(TARGET).c \
 usb.c 
-#lib_AT91SAM7S256.c \
-#usb.c
 
 # List C source files here which must be compiled in ARM-Mode.
 # use file-extension c for "c-only"-files
@@ -85,7 +83,7 @@ CPPSRCARM =
 ASRC = 
 
 # List Assembler source files here which must be assembled in ARM-Mode..
-ASRCARM = startup_SAM7S.S
+ASRCARM = ram-reset.S flash-reset.S
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 # 0 = turn off optimization. s = optimize for size.
@@ -206,7 +204,7 @@ LDFLAGS += $(patsubst %,-l%,$(EXTRA_LIBS))
 
 
 # Set Linker-Script Depending On Selected Memory and Controller
-LDFLAGS +=-T$(SUBMDL)-ROM.ld
+LDFLAGS +=-Tldscript-flash
 
 
 

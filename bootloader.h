@@ -15,6 +15,7 @@
 #define GPIO_LED_2		AT91C_PIO_PA2
 #define GPIO_LED_3		AT91C_PIO_PA31
 #define GPIO_USB_PU		AT91C_PIO_PA16
+#define GPIO_BUTTON		AT91C_PIO_PA4
 
 #define WDT_HIT()		AT91C_BASE_WDTC->WDTC_WDCR = 0xa5000001
 #define LOW(x)	 		AT91C_BASE_PIOA->PIO_CODR = (x)
@@ -22,6 +23,7 @@
 #define GETBIT(x) 		(AT91C_BASE_PIOA->PIO_ODSR & (x)) ? 1:0
 #define SETBIT(x, y) 	(y) ? (HIGH(x)):(LOW(x))
 #define INVBIT(x) 		SETBIT((x), !(GETBIT(x)))
+#define BUTTON_PRESS()	!(AT91C_BASE_PIOA->PIO_PDSR & GPIO_BUTTON)
 
 
 #define USB_D_PLUS_PULLUP_OFF() { \
