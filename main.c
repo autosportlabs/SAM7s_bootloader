@@ -245,14 +245,10 @@ static void flash_mode(int externally_entered)
 
 int main(void)
 {
-    setupHardware();
-
-
     if(BUTTON_PRESS()) {
+        setupHardware();
     	flash_mode(0);
     } else {
-    	// jump to Flash address of the osimage entry point (LSBit set for thumb mode)
-    	//asm("bx %0\n" : : "r" ( ((int)&_osimage_entry) | 0x1 ) );
     	asm("bx %0\n" : : "r" ( ((int)&_osimage_entry)) );
     }
 }
