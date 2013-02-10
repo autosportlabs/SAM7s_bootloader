@@ -15,7 +15,8 @@ static void setupHardware( void )
     // Kill all the pullups, especially the one on USB D+; leave them for
     // the unused pins, though.
 
-#define BUTTON_PRESS()	!(AT91C_BASE_PIOA->PIO_PDSR & GPIO_BUTTON)
+
+	AT91C_BASE_PIOA->PIO_PER = GPIO_BUTTON;
     AT91C_BASE_PIOA->PIO_PPUDR =
     	GPIO_USB_PU			|
 		GPIO_LED_1			|
@@ -245,8 +246,8 @@ static void flash_mode(int externally_entered)
 
 int main(void)
 {
+    setupHardware();
     if(BUTTON_PRESS()) {
-        setupHardware();
     	flash_mode(0);
     } else {
     	asm("bx %0\n" : : "r" ( ((int)&_osimage_entry)) );

@@ -91,8 +91,8 @@ static const uint8_t DeviceDescriptor[] = {
 	0x00,			// Subclass code (0)
 	0x00,			// Protocol (No specific protocol)
 	0x08,			// Maximum packet size for Endpoint 0 (8 bytes)
-	0xc4,0x9a,		// Vendor ID (random numbers)
-	0x8f,0x4b,		// Product ID (random numbers)
+	0xd0,0x16,		// Vendor ID (random numbers)
+	0x73,0x06,		// Product ID (random numbers)
 	0x01,0x00,		// Device release number (0001)
 	0x01,			// Manufacturer string descriptor index
 	0x02,			// Product string descriptor index
@@ -156,50 +156,52 @@ static const uint8_t StringDescriptor0[] = {
 };
 
 static const uint8_t StringDescriptor1[] = {
-	24,				// Length
+	30,				// Length
 	0x03,			// Type is string
-	'J', 0x00,
-	'.', 0x00,
-	' ', 0x00,
-	'W', 0x00,
-	'e', 0x00,
-	's', 0x00,
-	't', 0x00,
-	'h', 0x00,
+	'A', 0x00,
 	'u', 0x00,
-	'e', 0x00,
+	't', 0x00,
+	'o', 0x00,
 	's', 0x00,
+	'p', 0x00,
+	'o', 0x00,
+	'r', 0x00,
+	't', 0x00,
+	' ', 0x00,
+	'L', 0x00,
+	'a', 0x00,
+	'b', 0x00,
+	's', 0x00
 };
 
 static const uint8_t StringDescriptor2[] = {
-	54,				// Length
+	52,				// Length
 	0x03,			// Type is string
-	'P', 0x00,
-	'r', 0x00,
-	'o', 0x00,
-	'x', 0x00,
-	'M', 0x00,
-	'a', 0x00,
-	'r', 0x00,
-	'k', 0x00,
-	'-', 0x00,
-	'3', 0x00,
-	' ', 0x00,
-	'R', 0x00,
-	'F', 0x00,
-	'I', 0x00,
-	'D', 0x00,
-	' ', 0x00,
-	'I', 0x00,
-	'n', 0x00,
-	's', 0x00,
-	't', 0x00,
-	'r', 0x00,
+	'A', 0x00,
 	'u', 0x00,
-	'm', 0x00,
-	'e', 0x00,
-	'n', 0x00,
 	't', 0x00,
+	'o', 0x00,
+	's', 0x00,
+	'p', 0x00,
+	'o', 0x00,
+	'r', 0x00,
+	't', 0x00,
+	' ', 0x00,
+	'L', 0x00,
+	'a', 0x00,
+	'b', 0x00,
+	's', 0x00,
+	' ', 0x00,
+	'B', 0x00,
+	'o', 0x00,
+	'o', 0x00,
+	't', 0x00,
+	'l', 0x00,
+	'o', 0x00,
+	'a', 0x00,
+	'd', 0x00,
+	'e', 0x00,
+	'r', 0x00,
 };
 
 // Serial Number
@@ -518,7 +520,7 @@ int UsbPoll(int blinkLeds)
 	}
 
 	if(AT91C_BASE_UDP->UDP_ISR & UDP_INTERRUPT_ENDPOINT(1)) {
-		LED_3_ON();
+		LED_3_INV();
 		HandleRxdData();
 		ret = TRUE;
 	}
