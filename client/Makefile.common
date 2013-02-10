@@ -1,0 +1,56 @@
+#-----------------------------------------------------------------------------
+# This code is licensed to you under the terms of the GNU GPL, version 2 or,
+# at your option, any later version. See the LICENSE.txt file for the text of
+# the license.
+#-----------------------------------------------------------------------------
+# Common makefile functions for all platforms
+#-----------------------------------------------------------------------------
+
+# This new makefile replaces the previous Makefile/Makefile.linux
+# with as much common code for both environments as possible.
+# Following is a short OS detection to set up variables, all the
+# remaining Makefile should be portable and only depend on these
+# variables
+#
+
+# Make sure that all is the default target
+# (The including Makefile still needs to define what 'all' is)
+
+platform = $(shell uname)
+
+all:
+
+CC	= gcc
+AS	= as
+LD	= ld
+OBJCOPY = objcopy
+
+# Windows' echo echos its input verbatim, on Posix there is some
+#  amount of shell command line parsing going on. echo "" on 
+#  Windows yields literal "", on Linux yields an empty line
+ifeq ($(shell echo ""),)
+
+# This is probably a proper system, so we can use uname
+UNAME := $(shell uname)
+DELETE=rm -rf
+MOVE=mv
+COPY=cp
+PATHSEP=/
+FLASH_TOOL=client/flasher
+DETECTED_OS=$(UNAME)
+
+else
+
+# Assume that we are running on Windows.
+DELETE=del /q
+MOVE=ren
+COPY=copy
+PATHSEP=\\#
+FLASH_TOOL=winsrc\\flasher.exe
+DETECTED_OS=Windows
+
+endif
+
+CFLAGS =  -c -Wall  -pedantic -std=gnu99 $(APP_CFLAGS)
+LDFLAGS = -nostartfiles -nodefaultlibs -Wl,-gc-sections -n
+LIBS = -lgcc
