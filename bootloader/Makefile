@@ -51,6 +51,8 @@ TARGET = main
 
 # Common directories
 
+COMMON_INCLUDE = ../include
+
 # App specific dirs
 CPU_MODULE_DIR = cpu_module
 
@@ -123,7 +125,7 @@ CDEFS += -DSAM7_GCC
 CDEFS += -DTHUMB_INTERWORK
 
 # Place -I options here
-CINCS = -I. 
+CINCS = -I. -I$(COMMON_INCLUDE) 
 # Place -D or -U options for ASM here
 ADEFS =  -D$(RUN_MODE)
 
