@@ -229,6 +229,7 @@ static const uint8_t * const StringDescriptors[] = {
 
 static uint8_t UsbBuffer[64];
 static int  UsbSoFarCount;
+static int ledFlashCount;
 
 static uint8_t CurrentConfiguration;
 
@@ -469,6 +470,7 @@ void UsbStart(void)
 	volatile int i;
 
 	UsbSoFarCount = 0;
+	ledFlashCount = 0;
 
 	USB_D_PLUS_PULLUP_OFF();
 
@@ -490,7 +492,7 @@ int UsbConnected()
 		return FALSE;
 }
 
-int UsbPoll(int blinkLeds)
+int UsbPoll()
 {
 	int ret = FALSE;
 
@@ -520,7 +522,11 @@ int UsbPoll(int blinkLeds)
 	}
 
 	if(AT91C_BASE_UDP->UDP_ISR & UDP_INTERRUPT_ENDPOINT(1)) {
-		LED_3_INV();
+		ledFlashCount++;
+		if (ledFlashCount > 20){
+			LED_3_INV();
+			ledFlashCount = 0;
+		}
 		HandleRxdData();
 		ret = TRUE;
 	}

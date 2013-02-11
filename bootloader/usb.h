@@ -11,7 +11,7 @@
 
 void UsbSendPacket(uint8_t *packet, int len);
 
-int UsbPoll(int blinkLeds);
+int UsbPoll();
 
 void UsbStart(void);
 

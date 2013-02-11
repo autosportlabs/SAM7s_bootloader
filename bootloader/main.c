@@ -6,6 +6,43 @@
 unsigned int start_addr, end_addr, bootrom_unlocked;
 extern unsigned int _bootrom_start, _bootrom_end, _flash_start, _flash_end, _osimage_entry;
 
+#define FATAL_ERROR_HARDWARE	1
+#define FATAL_ERROR_FLASH	 	2
+#define FATAL_ERROR_COMMAND  	3
+#define FATAL_ERROR_UNKNOWN		4
+
+static void fatalError(int type){
+
+	int count;
+	int pause = 5000000;
+	int flash = 1000000;
+
+	switch (type){
+		case FATAL_ERROR_HARDWARE:
+		case FATAL_ERROR_FLASH:
+		case FATAL_ERROR_COMMAND:
+			count = type;
+			break;
+		default:
+			count = FATAL_ERROR_UNKNOWN;
+			break;
+	}
+
+	while(1){
+		for (int c = 0; c < count; c++){
+			LED_1_ON();
+			LED_2_ON();
+			LED_3_ON();
+			for (int i=0;i<flash;i++){}
+			LED_1_OFF();
+			LED_2_OFF();
+			LED_3_OFF();
+			for (int i=0;i<flash;i++){}
+		}
+		for (int i=0;i<pause;i++){}
+	}
+}
+
 static void setupHardware( void )
 {
 
@@ -107,10 +144,6 @@ static void setupHardware( void )
 	return;
  }
 
-static void Fatal(void)
-{
-    for(;;);
-}
 
 void UsbPacketReceived(uint8_t *packet, int len)
 {
@@ -119,7 +152,7 @@ void UsbPacketReceived(uint8_t *packet, int len)
     volatile uint32_t *p;
 
     if(len != sizeof(*c)) {
-        Fatal();
+        fatalError(FATAL_ERROR_COMMAND);
     }
 
     switch(c->cmd) {
@@ -205,7 +238,7 @@ void UsbPacketReceived(uint8_t *packet, int len)
             break;
 
         default:
-            Fatal();
+            fatalError(FATAL_ERROR_COMMAND);
             break;
     }
 
@@ -224,22 +257,7 @@ static void flash_mode(int externally_entered)
 	UsbStart();
 	for(;;) {
 		WDT_HIT();
-
 		UsbPoll(TRUE);
-
-		/*
-		if(!externally_entered && !BUTTON_PRESS()) {
-			// Perform a reset to leave flash mode
-			USB_D_PLUS_PULLUP_OFF();
-			LED_B_ON();
-			AT91C_BASE_RSTC->RSTC_RCR = RST_CONTROL_KEY | AT91C_RSTC_PROCRST;
-			for(;;);
-		}
-		if(externally_entered && BUTTON_PRESS()) {
-			// Let the user's button press override the automatic leave
-			externally_entered = 0;
-		}
-		*/
 	}
 }
 
