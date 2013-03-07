@@ -343,7 +343,7 @@ static int enter_bootloader(void)
 		return 0;
 	}
 
-	fprintf(stderr, "Error: Unknown Proxmark mode\n");
+	fprintf(stderr, "Error: Unknown bootloader mode\n");
 	return -1;
 }
 

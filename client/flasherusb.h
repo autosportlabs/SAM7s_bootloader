@@ -22,7 +22,7 @@ extern unsigned char error_occured;
 void SendCommand(UsbCommand *c);
 bool ReceiveCommandPoll(UsbCommand *c);
 void ReceiveCommand(UsbCommand *c);
-struct usb_dev_handle* FindProxmark(int verbose, unsigned int *iface);
+struct usb_dev_handle* FindDevice(int verbose, unsigned int *iface);
 struct usb_dev_handle* OpenDevice(int verbose);
 void CloseDevice(void);
 
