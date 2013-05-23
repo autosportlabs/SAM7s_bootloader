@@ -43,10 +43,8 @@ static void fatalError(int type){
 	}
 }
 
-static void setupHardware( void )
-{
-
-    // First set up all the I/O pins; GPIOs configured directly, other ones
+static void setupPorts(){
+    // set up all the I/O pins; GPIOs configured directly, other ones
     // just need to be assigned to the appropriate peripheral.
 
     // Kill all the pullups, especially the one on USB D+; leave them for
@@ -76,45 +74,37 @@ static void setupHardware( void )
     LED_1_OFF();
     LED_2_OFF();
     LED_3_OFF();
+    AT91C_BASE_PMC->PMC_PCER = (1<<AT91C_ID_PIOA);
+}
 
+static void setupHardware( void )
+{
+    //* Set MCK at 48 054 850
+    // 1 Enabling the Main Oscillator:
+    // SCK = 1/32768 = 30.51 uSecond
+    // Start up time = 8 * 6 / SCK = 56 * 30.51 = 1,46484375 ms
+    AT91C_BASE_PMC->PMC_MOR = (( AT91C_CKGR_OSCOUNT & (0x06 <<8) | AT91C_CKGR_MOSCEN ));
+    // Wait the startup time
+    while(!(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_MOSCS));
+    // 2 Checking the Main Oscillator Frequency (Optional)
+    // 3 Setting PLL and divider:
+    // - div by 14 Fin = 1.3165 =(18,432 / 14)
+    // - Mul 72+1: Fout = 96.1097 =(3,6864 *73)
+    // for 96 MHz the error is 0.11%
+    // Field out NOT USED = 0
+    // PLLCOUNT pll startup time estimate at : 0.844 ms
+    // PLLCOUNT 28 = 0.000844 /(1/32768)
+    AT91C_BASE_PMC->PMC_PLLR = ((AT91C_CKGR_DIV & 14 ) | (AT91C_CKGR_PLLCOUNT & (28<<8)) | (AT91C_CKGR_MUL & (72<<16)));
 
-	// enable main oscillator and set startup delay
-    AT91C_BASE_PMC->PMC_MOR = 0x00000601;
-//        AT91C_CKGR_MOSCEN |
-//        PMC_MAIN_OSC_STARTUP_DELAY(8);
-
-	// wait for main oscillator to stabilize
-	while ( !(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_MOSCS) )
-		;
-
-    // PLL output clock frequency in range  80 - 160 MHz needs CKGR_PLL = 00
-    // PLL output clock frequency in range 150 - 180 MHz needs CKGR_PLL = 10
-    // PLL output is MAINCK * multiplier / divisor = 16Mhz * 12 / 2 = 96Mhz
-    AT91C_BASE_PMC->PMC_PLLR = 0x00191C05;
-//    	PMC_PLL_DIVISOR(2) |
-//		PMC_PLL_COUNT_BEFORE_LOCK(0x50) |
-//		PMC_PLL_FREQUENCY_RANGE(0) |
-//		PMC_PLL_MULTIPLIER(12) |
-//		PMC_PLL_USB_DIVISOR(1);
-
-	// wait for PLL to lock
-	while ( !(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_LOCK) )
-		;
-
-	// datasheet recommends that this register is programmed in two operations
-	// when changing to PLL, program the prescaler first then the source
-    AT91C_BASE_PMC->PMC_MCKR = 0x00000007;
-
-	// wait for main clock ready signal
-	while ( !(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_MCKRDY) )
-		;
-
-	// set the source to PLL
-//    AT91C_BASE_PMC->PMC_MCKR = 0x00000007 | AT91C_PMC_CSS_PLL_CLK;
-
-	// wait for main clock ready signal
-	//while ( !(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_MCKRDY) )
-		//;
+    // Wait the startup time
+    while(!(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_LOCK));
+    while(!(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_MCKRDY));
+    // 4. Selection of Master Clock and Processor Clock
+    // select the PLL clock divided by 2
+    AT91C_BASE_PMC->PMC_MCKR = AT91C_PMC_PRES_CLK_2 ;
+    while(!(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_MCKRDY));
+    AT91C_BASE_PMC->PMC_MCKR |= AT91C_PMC_CSS_PLL_CLK ;
+    while(!(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_MCKRDY));
 
 	/* When using the JTAG debugger the hardware is not always initialised to
 	the correct default state.  This line just ensures that this does not
@@ -140,7 +130,6 @@ static void setupHardware( void )
 		(1<<AT91C_ID_SSC)	|
 		(1<<AT91C_ID_PWMC)	|
 		(1<<AT91C_ID_UDP);
-
 	return;
  }
 
@@ -264,8 +253,9 @@ static void flash_mode(int externally_entered)
 
 int main(void)
 {
-    setupHardware();
+	setupPorts();
     if(BUTTON_PRESS()) {
+        setupHardware();
     	flash_mode(0);
     } else {
     	asm("bx %0\n" : : "r" ( ((int)&_osimage_entry)) );
